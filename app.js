@@ -16,13 +16,15 @@ app.use(function validateBearerToken(req, res, next) {
     next()
   })
 
-app.use(morgan('dev'))
+// app.use(morgan('dev'))
+const morganSetting = process.env.NODE_ENV === 'production' ? 'tiny' : 'common'
+app.use(morgan(morganSetting))
 app.use(cors())
 app.use(helmet())
 
 app.get('/movie', (req, res) => {
     const { genre, country, avg_vote } = req.query
-    console.log(genre, country, avg_vote);
+    // console.log(genre, country, avg_vote);
     let filteredMovies = dataSet
     if(genre) {
         filteredMovies = filteredMovies.filter(movie => {
@@ -45,11 +47,20 @@ app.get('/movie', (req, res) => {
     res.json(filteredMovies);
 })
 
+// 4 parameters in middleware, express knows to treat this as error handler
+app.use((error, req, res, next) => {
+    let response
+    if (process.env.NODE_ENV === 'production') {
+      response = { error: { message: 'server error' }}
+    } else {
+      response = { error }
+    }
+    res.status(500).json(response)
+  })
 
 
 
-
-const PORT = 8000;
+const PORT = process.env.PORT || 8000
 app.listen(PORT, () => {
-    console.log("Listening to port " + PORT);
+    // console.log("Listening to port " + PORT);
 })
